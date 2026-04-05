@@ -1,7 +1,11 @@
 """
-Handles file uploads from Slack #inbox.
-Downloads the file and saves it to VAULT_PATH/_raw/inbox/ with a
-timestamp-prefixed, sanitized filename. Never overwrites existing files.
+Handles file uploads from Slack channels.
+Routes to the correct inbox based on channel type:
+  - #research → research/_raw/inbox/to-tag/
+  - #training → training/inbox/to-tag/
+  - Other channels → rejected with helpful error
+
+Never overwrites existing files. Sanitizes filenames.
 """
 
 import logging
@@ -15,7 +19,11 @@ import config
 
 logger = logging.getLogger(__name__)
 
-_INBOX_DIR = Path(config.VAULT_PATH) / "_raw" / "inbox"
+_INBOX_PATHS = {
+    "research": Path(config.VAULT_PATH) / "research" / "_raw" / "inbox" / "to-tag",
+    "training": Path(config.VAULT_PATH) / "training" / "inbox" / "to-tag",
+}
+
 _UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
@@ -36,13 +44,24 @@ def _unique_path(dest_dir: Path, filename: str) -> Path:
     return candidate
 
 
-def handle_file_upload(file_info: dict) -> str:
+def handle_file_upload(file_info: dict, inbox_type: str) -> tuple[str, Path]:
     """
-    Download a file from Slack and save to _raw/inbox/.
-    Returns a confirmation message string.
+    Download a file from Slack and save to the appropriate inbox.
+
+    Args:
+        file_info: Slack file info dict from files.info API
+        inbox_type: "research" or "training"
+
+    Returns:
+        Tuple of (confirmation message, saved file path)
+
     Raises on download or write failure.
     """
-    _INBOX_DIR.mkdir(parents=True, exist_ok=True)
+    inbox_dir = _INBOX_PATHS.get(inbox_type)
+    if inbox_dir is None:
+        raise ValueError(f"Unknown inbox_type: {inbox_type}")
+
+    inbox_dir.mkdir(parents=True, exist_ok=True)
 
     original_name = file_info.get("name", "upload")
     url = (
@@ -55,9 +74,9 @@ def handle_file_upload(file_info: dict) -> str:
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     safe_name = _sanitize(original_name)
     filename = f"{timestamp}-{safe_name}"
-    dest = _unique_path(_INBOX_DIR, filename)
+    dest = _unique_path(inbox_dir, filename)
 
-    logger.info("inbox_handler: downloading %s → %s", url, dest.name)
+    logger.info("inbox_handler: downloading %s → %s (%s)", url, dest.name, inbox_type)
 
     response = requests.get(
         url,
@@ -72,5 +91,10 @@ def handle_file_upload(file_info: dict) -> str:
             fh.write(chunk)
 
     size_kb = dest.stat().st_size // 1024
-    logger.info("inbox_handler: saved %s (%d KB)", dest.name, size_kb)
-    return f"Filed `{dest.name}` to inbox ({size_kb} KB). Will be processed on the next briefing run or ingest command."
+    logger.info("inbox_handler: saved %s (%d KB) to %s", dest.name, size_kb, inbox_type)
+
+    msg = (
+        f"Filed `{dest.name}` to `{inbox_type}` inbox ({size_kb} KB). "
+        f"Running inference-review..."
+    )
+    return msg, dest

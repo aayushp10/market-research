@@ -1,6 +1,6 @@
 """
 Morning briefing runner.
-Called by the scheduler or by a manual "run the brief" command in #briefings.
+Called by the scheduler or by a manual "/brief" command in #briefings.
 """
 
 import logging
@@ -13,25 +13,34 @@ logger = logging.getLogger(__name__)
 _BRIEFING_TIMEOUT = 900  # 15 minutes
 
 
-def run_morning_briefing() -> str:
+def run_morning_briefing(topic: str | None = None) -> str:
     """
     Kick off the morning briefing workflow via Claude Code.
+    If topic is provided, runs a scoped briefing on that topic.
     Returns the summary text for posting to Slack #briefings.
     """
     today = date.today().isoformat()
+
+    if topic:
+        scope_line = f"Scoped briefing on: {topic}. "
+    else:
+        scope_line = ""
+
     prompt = (
         f"Run the morning briefing workflow per CLAUDE.md. "
-        f"Today's date: {today}. "
+        f"Today's date: {today}. {scope_line}"
         f"Steps: "
-        f"1. Read shared/macro/briefing-scope.md and shared/macro/setups.md and the last 3 daily files. "
-        f"2. Process any files in _raw/inbox/ (read each one). "
-        f"3. Run 5-10 targeted web searches based on briefing scope, active setups, and inbox material. "
-        f"4. Draft the daily file at shared/macro/daily/{today}.md with status: draft, reviewed: false. "
-        f"5. Move inbox files to their permanent _raw/ homes. "
-        f"6. STOP — do not update setups.md or any issuer/sector pages. "
-        f"7. Commit the draft: 'daily: {today} draft — {{one-line summary}}'. "
-        f"8. Return a concise Slack summary: top-of-mind tension, key themes covered, "
-        f"any proposed setups (not committed), and any gaps flagged. Keep it under 400 words."
+        f"1. Read research/briefing-scope.md and the last 3 files in research/briefings/. "
+        f"2. Read current macro state in research/macro/*. "
+        f"3. Process any tagged files in research/_raw/inbox/to-file/ (tagged but not yet filed). "
+        f"4. Run 5-10 targeted web searches based on briefing scope and material from inbox. "
+        f"5. Draft the daily file at research/briefings/{today}.md with status: draft, reviewed: false. "
+        f"6. Update relevant research/macro/* subfolders with dated snapshots of what you covered. "
+        f"7. STOP — do not update any issuer/sector pages or promote to ledger. Wait for review. "
+        f"8. Commit the draft: 'v2-briefings: {today} draft — {{one-line summary}}'. "
+        f"9. Return a concise Slack summary: top-of-mind tension, key themes covered, "
+        f"any ledger promotion candidates spotted (not committed), and any gaps flagged. "
+        f"Keep it under 400 words."
     )
 
     logger.info("briefing: starting morning briefing for %s", today)
