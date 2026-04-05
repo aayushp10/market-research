@@ -9,3 +9,4 @@ Thumbs.db
 _agent/logs/
 _agent/slack_adapter/.venv/
 _agent/sessions.json
+_agent/slack_adapter/__pycache__/
