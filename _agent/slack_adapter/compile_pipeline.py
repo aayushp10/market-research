@@ -137,10 +137,13 @@ def approve(version: str | None = None) -> str:
         f"Steps:\n"
         f"1. Copy contents of training/_compiled/credit-trading/{ver}/ "
         f"to training/_compiled/credit-trading/current/ (overwrite).\n"
-        f"2. If SKILLS_PUBLISH_PATH is set in .env, copy current/SKILL.md there.\n"
-        f"3. Log the publish to training/_compiled/credit-trading/publish_log.md.\n"
-        f"4. Commit: 'v2-compile: credit-trading {ver} published'\n"
-        f"5. Return confirmation with version, timestamp, and publish path."
+        f"2. Create a .skill ZIP archive at training/_compiled/credit-trading/current.skill "
+        f"containing the current/ folder contents (SKILL.md + references/) — this is the "
+        f"portable format for sharing or external loading.\n"
+        f"3. If SKILLS_PUBLISH_PATH is set in .env, copy current.skill there.\n"
+        f"4. Log the publish to training/_compiled/credit-trading/publish_log.md.\n"
+        f"5. Commit: 'v2-compile: credit-trading {ver} published'\n"
+        f"6. Return confirmation with version, timestamp, and publish path."
     )
 
     return claude_runner.send(
