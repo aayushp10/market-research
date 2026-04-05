@@ -128,6 +128,17 @@ def _health_status(client, channel: str, thread_ts: str | None) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Catch-all: log every raw event for debugging
+# ---------------------------------------------------------------------------
+
+@app.event({"type": "message"})
+def handle_all_messages(body, event, client, logger):
+    logger.info("RAW MESSAGE EVENT: channel=%s subtype=%s text=%r",
+                event.get("channel"), event.get("subtype"), (event.get("text") or "")[:80])
+    _dispatch_message(event, client, logger)
+
+
+# ---------------------------------------------------------------------------
 # #inbox — file uploads
 # ---------------------------------------------------------------------------
 
@@ -150,17 +161,16 @@ def handle_file_shared(event, client, logger):
 
 
 # ---------------------------------------------------------------------------
-# Message events
+# Message dispatch (called from handle_all_messages)
 # ---------------------------------------------------------------------------
 
-@app.event("message")
-def handle_message(event, client, say, logger):
+def _dispatch_message(event, client, logger):
     subtype = event.get("subtype")
     if subtype in ("bot_message", "message_changed", "message_deleted", "file_share"):
         return
 
     channel = event.get("channel", "")
-    text = event.get("text", "").strip()
+    text = (event.get("text") or "").strip()
     thread_ts = event.get("thread_ts")
     ts = event.get("ts")
 
@@ -217,6 +227,10 @@ def handle_message(event, client, say, logger):
     # ------------------------------------------------------------------
     if _is_agent(channel):
         text_lower = text.lower().strip()
+
+        if text_lower == "ping":
+            client.chat_postMessage(channel=channel, text="pong", thread_ts=thread_ts or ts)
+            return
 
         if text_lower in ("status", "health", "health check"):
             _health_status(client, channel, thread_ts or ts)
