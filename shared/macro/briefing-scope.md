@@ -10,21 +10,21 @@ This file tells the agent what's in scope for morning briefings. The agent reads
 ## Active coverage — single names
 
 ### Credit world (core)
-- [[ORCL]] — technology IG, AI capex story, hyperscaler complex
-- [[DOW]] — basic materials IG, chemicals, oil feedstock exposure
-- [[FLO]] — consumer goods IG, fallen angel / crossover watch
-- [[KDP]] — consumer goods IG, beverages/staples
-- [[JPM]] — banking IG, Big 6 bank proxy
+- ORCL — technology IG, AI capex story, hyperscaler complex
+- DOW — basic materials IG, chemicals, oil feedstock exposure
+- FLO — consumer goods IG, fallen angel / crossover watch
+- KDP — consumer goods IG, beverages/staples
+- JPM — banking IG, Big 6 bank proxy
 
 ### BDC world (core)
-- [[OBDC]] — Blue Owl Capital Corp, public BDC
-- [[OTF]] — Blue Owl Technology Finance Corp, public tech BDC
+- OBDC — Blue Owl Capital Corp, public BDC
+- OTF — Blue Owl Technology Finance Corp, public tech BDC
 
 ## Active coverage — sectors
 
-- [[credit/sectors/technology-ig|Technology IG]] — mega-cap tech credit
-- [[credit/sectors/banks-big-6|Financials: Big 6 Banks]] — money-center banks
-- [[credit/sectors/life-insurers|Life Insurers]] — with specific attention to private credit allocations and transmission from BDC stress
+- Technology IG — mega-cap tech credit
+- Financials: Big 6 Banks — money-center banks
+- Life Insurers — with specific attention to private credit allocations and transmission from BDC stress
 
 ## Macro factors in scope
 
