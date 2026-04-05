@@ -1,0 +1,11 @@
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/workspaces.json
+.trash/
+*.tmp
+.DS_Store
+Thumbs.db
+.env
+_agent/logs/
+_agent/slack_adapter/.venv/
+_agent/sessions.json
