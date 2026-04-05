@@ -120,6 +120,32 @@ These folders are written by automated pipelines. Never hand-edit their contents
 - **`_provenance/`** — provenance graphs mapping source contributions to each skill version.
 - **`_transcripts/`** — raw conversation transcripts. Immutable once filed.
 
+### Compiled skill file structure
+
+Each version in `_compiled/credit-trading/` is a **multi-file system**, not a single document:
+
+```
+_compiled/credit-trading/v1.0/
+├── SKILL.md                              ← entry point (persona, reasoning, pointers)
+└── references/
+    ├── masters_frameworks.md             ← mental models (Marks, Klarman, Fridson, etc.)
+    ├── workflows.md                      ← analytical playbooks (RV, new issue, etc.)
+    ├── individual_credit_eval.md         ← three-lens credit evaluation methodology
+    └── ig_sector_map.md                  ← 276 IG issuers across 15 mega-sectors
+```
+
+`SKILL.md` tells Claude Code **when** to read each reference file (e.g., "read `references/masters_frameworks.md` when analyzing risk/reward asymmetry"). The references are not optional appendices — they are integral parts of the skill loaded on demand.
+
+When the compile pipeline runs, it may update **any** of these files based on what new training content was added:
+- New framework sources → may update `masters_frameworks.md`
+- New workflow/playbook content or amendments → may update `workflows.md`
+- Credit evaluation methodology changes → may update `individual_credit_eval.md`
+- Sector coverage changes → may update `ig_sector_map.md`
+- Persona or reasoning framework changes → may update `SKILL.md`
+- Entirely new knowledge domain → may create a **new** reference file
+
+The `current/` directory is always a complete mirror of the latest published version. Research agents read from `current/` — they never need to know the version number.
+
 ---
 
 ## Compile trigger discipline
