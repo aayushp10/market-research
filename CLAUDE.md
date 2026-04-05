@@ -41,6 +41,42 @@ Read this file at the start of every session. Read the nested `credit/CLAUDE.md`
 
 ---
 
+## Wikilinks and file placement
+
+Wikilinks are a promise that the target exists. Speculative linking pollutes the vault with broken references and triggers Obsidian's create-on-click behavior, which produces blank stub files at the vault root. These rules prevent that.
+
+### Linking rules
+
+1. **Only emit `[[wikilinks]]` to pages that currently exist in the vault OR that you are creating in the same operation.** Before writing a wikilink, verify the target path exists on disk. Do not assume.
+
+2. **For mentioned entities without a page yet, use plain text.** Example: write "OBDC" not "[[OBDC]]" if `bdc/issuers/OBDC.md` does not exist.
+
+3. **If an unlinked entity deserves a page, propose creating it in the Dig section of the daily briefing** rather than silently linking to a non-existent page. That way the decision to create a new page is explicit and reviewed.
+
+4. **When you genuinely need to create a new page in the same operation,** create it first with at least template scaffolding filled in, then link to it. Never link first and create later.
+
+### File placement rules
+
+5. **New content pages go in the correct folder per world routing. Never at the vault root.** The vault root is reserved for operational files only: `CLAUDE.md`, `README.md`, `index.md`, `log.md`. Nothing else should be written to the root by you, ever.
+
+6. **Folder assignments:**
+   - Credit issuers → `credit/issuers/`
+   - Credit sectors → `credit/sectors/`
+   - Credit situations → `credit/situations/`
+   - Credit universe reference → `credit/universe/`
+   - BDC issuers → `bdc/issuers/`
+   - BDC segments → `bdc/segments/`
+   - BDC situations → `bdc/situations/`
+   - Frameworks (Marks, Klarman, Fridson, etc.) → `shared/frameworks/`
+   - Concepts (CDX mechanics, mark staleness, etc.) → `shared/concepts/`
+   - Macro state snapshots → `shared/macro/state/`
+   - Macro event pages → `shared/macro/events/`
+   - Daily briefings → `shared/macro/daily/`
+
+7. **If you're uncertain which folder a page belongs in,** ask in the daily review rather than guessing. Misfiled pages are harder to find later than un-created pages.
+
+---
+
 ## Morning briefing workflow
 
 Run this automatically before Aayush sits down. Target execution time: 5–10 minutes.
@@ -181,6 +217,8 @@ When a new source arrives, classify it into a world:
 - Delete retired setups or prior market-state snapshots.
 - Write views into facts pages.
 - Fabricate sources or citations. If you can't find a source for a claim, say so.
+- Write new content pages to the vault root. The root is reserved for operational files only.
+- Emit wikilinks to pages that don't exist and that you're not creating in the same operation.
 
 ---
 
