@@ -1,0 +1,22 @@
+# Infrastructure
+_agent/
+.git/
+.env
+.env.example
+.gitignore
+.obsidianignore
+.trash/
+
+# Build artifacts
+**/__pycache__/
+**/.venv/
+**/node_modules/
+
+# System folders (content, but hidden from Obsidian view)
+training/_compiled/
+training/_provenance/
+training/_transcripts/
+research/_index/
+research/_provenance/
+journal/_index/
+ledger/_index/
