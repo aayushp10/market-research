@@ -408,27 +408,25 @@ def _handle_rule_proposal(client, channel: str, reply_ts: str, proposal_text: st
 
 def _handle_journal_entry(client, channel: str, ts: str, text: str) -> None:
     """Process a journal entry through inference-review."""
-    resp = client.chat_postMessage(
+    client.chat_postMessage(
         channel=channel,
         text="Processing journal entry...",
         thread_ts=ts,
     )
-    thread_ts = resp.get("ts", ts)
     thread_state.create(
         thread_ts=ts,
         channel="journal",
         task_type="ingestion",
         target="journal-entry",
     )
-    _run_agent_task(
-        client, channel, ts,
-        f"A new journal entry was posted:\n\n{text}\n\n"
-        f"Per journal/CLAUDE.md:\n"
-        f"1. Infer entry_type, tickers, sectors, tags from the message.\n"
-        f"2. Mark each field with [inferred], [guess], or [needs input].\n"
-        f"3. Present the proposed entry with frontmatter for confirmation.\n"
-        f"4. Wait for Aayush to confirm or correct.",
-    )
+    try:
+        proposal = ingestion.propose_journal_entry(text)
+        client.chat_postMessage(channel=channel, text=proposal, thread_ts=ts)
+        thread_state.update(ts, status="pending_user")
+    except Exception as e:
+        logger.exception("Journal inference-review failed")
+        _post_ops_error(client, e, "journal ingestion proposal")
+        _post_error(client, channel, ts, e)
 
 
 def _health_status(client, channel: str, thread_ts: str) -> None:
@@ -523,6 +521,13 @@ def handle_file_shared(event, client, logger):
         info = client.files_info(file=file_id)
         file_info = info["file"]
         msg, saved_path = inbox_handler.handle_file_upload(file_info, inbox_type)
+
+        # Rate limiting: if >5 files in 2 minutes, offer batch processing
+        if ingestion.check_rate_limit():
+            batch_msg = ingestion.format_batch_offer(len(ingestion._recent_uploads))
+            client.chat_postMessage(channel=channel_id, text=batch_msg)
+            return
+
         resp = client.chat_postMessage(channel=channel_id, text=msg)
         thread_ts = resp["ts"]
 
@@ -605,12 +610,55 @@ def _dispatch_message(event, client, logger):
 def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: str, ts: str, text: str) -> None:
     """Handle a reply in an existing thread."""
     state = thread_state.get(thread_ts)
+    text_lower = text.strip().lower()
 
     if state is not None:
         session_key = state.get("session_key", f"{ch_type.value}-{thread_ts}")
         task_type = state.get("task_type", "general")
+        task_status = state.get("status", "in_progress")
 
-        # For briefing threads, use the review flow
+        # ---- Ingestion threads: confirm / correct / finalize ----
+        if task_type == "ingestion" and task_status == "pending_user":
+            inbox_type = state.get("channel", ch_type.value)
+            if inbox_type == "journal":
+                inbox_type = "journal"
+
+            is_confirm = text_lower in (
+                "confirmed", "confirm", "yes", "ok", "lgtm", "looks good",
+                "confirm final version", "confirm final version?",
+            )
+
+            if is_confirm:
+                client.chat_postMessage(
+                    channel=channel, text="Filing...", thread_ts=thread_ts,
+                )
+                try:
+                    result = ingestion.finalize_and_file(
+                        state.get("target", ""), inbox_type,
+                    )
+                    client.chat_postMessage(
+                        channel=channel, text=result, thread_ts=thread_ts,
+                    )
+                    thread_state.complete(thread_ts)
+                except Exception as e:
+                    logger.exception("Ingestion finalize failed")
+                    _post_error(client, channel, thread_ts, e)
+            else:
+                # Correction — apply and show diff
+                try:
+                    result = ingestion.apply_correction(
+                        state.get("target", ""), inbox_type, text,
+                    )
+                    client.chat_postMessage(
+                        channel=channel, text=result, thread_ts=thread_ts,
+                    )
+                    # Stays in pending_user for the final confirm
+                except Exception as e:
+                    logger.exception("Ingestion correction failed")
+                    _post_error(client, channel, thread_ts, e)
+            return
+
+        # ---- Briefing threads: review flow ----
         if task_type == "briefing" and ch_type == ChannelType.BRIEFINGS:
             client.chat_postMessage(
                 channel=channel, text="Applying review feedback...", thread_ts=thread_ts,
@@ -625,15 +673,21 @@ def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: 
                 f"Commit with format: 'v2-briefings: YYYY-MM-DD reviewed — {{one-line summary}}'. "
                 f"Return a short finalization summary for Slack (under 200 words)."
             )
-        else:
-            # Generic thread continuation
-            prompt = text
+            try:
+                result = claude_runner.send(
+                    prompt=prompt, session_key=session_key, timeout=600,
+                )
+                client.chat_postMessage(channel=channel, text=result, thread_ts=thread_ts)
+                thread_state.complete(thread_ts)
+            except Exception as e:
+                logger.exception("Briefing review failed")
+                _post_error(client, channel, thread_ts, e)
+            return
 
+        # ---- Generic thread continuation ----
         try:
             result = claude_runner.send(
-                prompt=prompt,
-                session_key=session_key,
-                timeout=600,
+                prompt=text, session_key=session_key, timeout=600,
             )
             client.chat_postMessage(channel=channel, text=result, thread_ts=thread_ts)
             thread_state.update(thread_ts)
