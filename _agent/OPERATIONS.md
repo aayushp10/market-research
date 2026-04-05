@@ -1,98 +1,150 @@
-# Market Research Agent — Operations
+# Market Research Agent — Operations (v2)
 
-## Daily operation
+## 1. Daily briefing
 
 **6:00 AM (automatic)**
-- Adapter reads briefing-scope.md, setups.md, last 3 dailies
-- Processes any files in _raw/inbox/
-- Runs 5–10 targeted web searches
-- Drafts shared/macro/daily/YYYY-MM-DD.md (status: draft, reviewed: false)
-- Moves inbox files to permanent _raw/ homes
-- Commits: `daily: YYYY-MM-DD draft — {summary}`
-- Posts summary to #briefings in Slack
+- Agent reads briefing-scope.md, setups.md, last 3 dailies, ledger open items.
+- Processes any files in _raw/inbox/.
+- Runs targeted web searches.
+- Drafts shared/macro/daily/YYYY-MM-DD.md (status: draft, reviewed: false).
+- Commits: `daily: YYYY-MM-DD draft — {summary}`.
+- Posts summary to #briefings.
 
-**Your 15 minutes (whenever you have time)**
-- Read the draft in Obsidian (laptop or phone)
-- Reply in the #briefings thread with feedback — freeform is fine:
+**Your review (in-thread)**
+- Read the draft, reply in the #briefings thread with freeform feedback:
   - "approve the BDC setup, cut the refiner line, add X"
   - "reject all proposed setups, rest looks good, reviewed"
-- The agent applies corrections, finalizes the file, updates setups.md, commits, posts summary back
+- Agent applies corrections, finalizes the file, updates macro folders, commits.
 
 **If you skip a day**
-- The draft stays as-is, never promoted to final
-- On your next engagement, the agent will ask: batch-review skipped drafts or move on?
-- For 1–2 day gaps: batch review is usually fast
-- For longer gaps: default to moving on
+- Draft stays as-is, never promoted to final.
+- Next engagement: agent asks batch-review or move-on.
 
 ---
 
-## Weekly operation (Friday afternoon or Sunday evening)
+## 2. Ingestion
 
-Post in #agent:
+**Sources (PDFs, links, docs)**
+- Drop in #research or #training.
+- Agent runs inference-review: proposes filename, folder, tags.
+- You approve/modify in-thread.
+- Agent files to the correct location, commits.
+
+**Journal entries**
+- Post freeform text in #journal.
+- Agent runs inference-review (lighter): proposes date-stamped entry, tags.
+- You approve; agent writes to shared/journal/, commits.
+
+---
+
+## 3. Deep dives
+
+- Post `/dive <ticker>` in #research.
+- Agent proposes scope (questions, sources, page structure).
+- You approve or trim scope in-thread.
+- Agent executes: searches, reads sources, writes/updates pages, commits.
+- Final summary posted back to #research thread.
+
+---
+
+## 4. Ledger
+
+Predictions are promoted from journal, research, or briefings into the ledger.
+
+- **Open**: active predictions awaiting resolution.
+- **Revisit**: flagged for re-evaluation (date-triggered or manual).
+- **Resolve**: outcome recorded, scored.
+
+Commands:
+- `/open` in #ledger — list all open predictions.
+- `/revisit` in #ledger — list items due for revisit.
+- `/resolve <id> <outcome>` in #ledger — close a prediction with outcome.
+- `/review` in #ledger — monthly review: accuracy stats, stale items, themes.
+
+---
+
+## 5. Compile
+
+Training compilation bundles new training files into a structured set.
+
+- Post `/compile` in #training to trigger.
+- Auto-trigger hint: 5+ new training files or 14+ days since last compile.
+- Agent posts proposed compilation (file list, structure, summary).
+- You approve or reject in-thread.
+- On approve: agent compiles, commits, posts confirmation.
+
+Check status anytime: `/compile status` in #training.
+
+---
+
+## 6. Rule evolution
+
+- Propose a rule change: `/rule propose <description>` in any channel.
+- Agent drafts a formal proposal and posts it in #agent-ops.
+- You respond: approve, modify, or reject.
+- On approve: agent updates the relevant config/rule file, commits, logs to rule_changes.md.
+
+---
+
+## 7. Weekly review
+
+Post in #agent-ops:
 ```
 run the weekly review
 ```
 
-The agent generates:
-- Dailies reviewed vs skipped this week
-- Setups moved (new / reinforced / killed / matured)
-- Pages touched most
-- Themes that recurred
-- Quality flags (repetitive briefings? Dig section producing anything?)
+Agent generates:
+- Dailies reviewed vs skipped.
+- Setups moved (new / reinforced / killed / matured).
+- Ledger items opened, revisited, resolved.
+- Pages touched most, recurring themes.
+- Quality flags (repetitive briefings, dead dig sections).
 
 ---
 
-## Monthly operation (lint pass)
+## 8. Monthly lint
 
-Post in #agent:
+Post in #agent-ops:
 ```
 run the monthly lint pass
 ```
 
-The agent does a cold-read of the entire wiki:
-- Flags claims without raw source citations
-- Flags stale content (>60 days, newer contradicting sources exist)
-- Flags contradictions between pages
-- Scores matured/dead setups: was the thesis right?
-- Flags orphan pages and stub pages
-- Proposes briefing-scope.md amendments
-
-This is the most important epistemic control. Do it once a month.
+Agent cold-reads the entire wiki:
+- Claims without raw source citations.
+- Stale content (>60 days, contradicting newer sources).
+- Contradictions between pages.
+- Matured/dead setup scoring.
+- Orphan and stub pages.
+- Proposes briefing-scope.md amendments.
 
 ---
 
-## Adding new coverage
+## 9. Updating Claude Code path
 
-Edit `shared/macro/briefing-scope.md` — add the name under the relevant section. The agent picks it up on the next briefing run. No other changes needed.
-
-To create the issuer page: drop a source file for that name in #inbox (or _raw/inbox/), then ask the agent to ingest it. The agent creates the page from the appropriate template (_templates/issuer-credit.md or _templates/issuer-bdc.md) on first ingest.
-
----
-
-## Retiring or adding a setup
-
-**Adding:** Propose setups arise from the morning briefing. The agent surfaces them in the draft under ## Setups. You approve or reject during review. Approved setups are added to setups.md. You never add directly to setups.md.
-
-**Retiring:** Tell the agent during review: "kill the [name] setup — [outcome notes]." The agent moves it to the Closed section of setups.md with your outcome notes. It is never deleted.
-
-**Re-evaluating:** Each setup has a re-evaluate date. The agent flags these in daily briefings when the date arrives.
-
----
-
-## Promoting a drift-watch theme to state
-
-Themes in briefing-scope.md have a status (drift-watch, active, closed). To promote one, tell the agent during any review or in #agent: "promote [theme] from drift-watch to active state — [reason]." The agent will propose a briefing-scope.md amendment; you approve it in the next daily review.
-
----
-
-## Updating Claude Code path
-
-When VS Code updates the Claude Code extension, the version number in the path changes. Update CLAUDE_PATH in .env:
+When VS Code updates the Claude Code extension, the version in the path changes.
 
 1. Open PowerShell and run:
    ```
    ls "$env:USERPROFILE\.vscode\extensions\" | Where-Object { $_ -like "anthropic.claude-code*" } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
    ```
-2. Copy the new extension folder name
-3. Edit C:\Data\Code\Market Research\.env — update CLAUDE_PATH to the new path
-4. Restart the adapter
+2. Copy the new extension folder name.
+3. Edit `C:\Data\Code\Market Research\.env` — update CLAUDE_PATH.
+4. Restart the adapter.
+
+---
+
+## 10. Troubleshooting
+
+**Adapter won't start**
+- Check `.env` exists and all vars are set (CLAUDE_PATH, SLACK_BOT_TOKEN, channel IDs).
+- Verify channel IDs match actual Slack channel IDs (not names).
+- Verify CLAUDE_PATH points to a valid Claude Code executable (see section 9).
+
+**Briefing fails or is empty**
+- Check `_agent/logs/` for the latest run log.
+- Confirm briefing-scope.md is not empty or malformed.
+- Confirm _raw/inbox/ is readable.
+
+**Ingestion stuck**
+- Check for files stuck in to-tag/ folders under _raw/.
+- Re-drop the file in the Slack channel to retry. Check logs for inference-review errors.
