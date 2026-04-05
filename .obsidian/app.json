@@ -1,3 +1,6 @@
 {
-  "attachmentFolderPath": "_raw/assets/"
+  "attachmentFolderPath": "_raw/assets/",
+  "userIgnoreFilters": ["_agent/", "_raw/", "_stubs/", ".git/"],
+  "newFileLocation": "folder",
+  "newFileFolderPath": "_stubs"
 }
