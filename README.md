@@ -33,7 +33,7 @@ research/
 ├── bdc/                   ← BDC / private credit complex world
 │   ├── CLAUDE.md          ← BDC-world-specific rules (different primitives)
 │   ├── issuers/           ← OBDC, OTF, ARCC, BXSL, ...
-│   ├── segments/          ← bdc-unsecured, pe-holdco, pe-insurance-sub
+│   ├── segments/          ← bdc-unsecured, pe-holdco, pe-insurrection -sub
 │   └── situations/
 │
 └── shared/                ← Cross-world layer
