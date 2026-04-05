@@ -1,6 +1,6 @@
-# Log
+# Briefings Log
 
-Running record of daily reviews and material wiki changes. One entry per review event.
+Running record of daily briefing reviews and material research changes. One entry per review event.
 
 ---
 
