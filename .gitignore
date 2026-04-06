@@ -10,3 +10,5 @@ _agent/logs/
 _agent/slack_adapter/.venv/
 _agent/sessions.json
 _agent/slack_adapter/__pycache__/
+_agent/thread_state.json
+training/_compiled/credit-trading/canary_results.json

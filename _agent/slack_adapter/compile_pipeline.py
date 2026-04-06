@@ -8,6 +8,7 @@ Trigger: /compile in #training.
 
 import json
 import logging
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -46,6 +47,109 @@ def get_next_version() -> str:
     return f"v{major}.{minor + 1}"
 
 
+# ---------------------------------------------------------------------------
+# Canary testing
+# ---------------------------------------------------------------------------
+
+_CANARY_FILE = _COMPILED_DIR / "canary_questions.md"
+_CANARY_RESULTS = _COMPILED_DIR / "canary_results.json"
+
+
+def _parse_canaries() -> list[dict]:
+    """Parse canary_questions.md into [{q, required: [...]}]."""
+    if not _CANARY_FILE.exists():
+        return []
+    text = _CANARY_FILE.read_text(encoding="utf-8")
+    blocks = re.split(r"\n## ", text)
+    canaries = []
+    for block in blocks[1:]:  # skip header
+        q_match = re.search(r"Q:\s*(.+)", block)
+        r_match = re.search(r"Required:\s*(.+)", block)
+        if q_match and r_match:
+            required = [
+                s.strip().strip('"').lower()
+                for s in r_match.group(1).split(",")
+            ]
+            canaries.append({"q": q_match.group(1).strip(), "required": required})
+    return canaries
+
+
+def run_canaries(version: str) -> dict:
+    """
+    Run every canary against the specified compiled version.
+    Each canary is asked in its own Claude session, pinned to the version
+    directory, to prevent cross-contamination between questions.
+    Returns {pass: bool, results: [...], version, timestamp}.
+    """
+    canaries = _parse_canaries()
+    if not canaries:
+        return {"pass": True, "results": [], "note": "no canary file — gate skipped"}
+
+    ver_dir = _COMPILED_DIR / version
+    if not ver_dir.exists():
+        return {"pass": False, "results": [], "note": f"version dir {version} not found"}
+
+    results = []
+
+    for i, c in enumerate(canaries):
+        prompt = (
+            f"Answer this question using ONLY the credit-trading skill at "
+            f"{ver_dir.as_posix()}/SKILL.md and its references/ folder. "
+            f"Do not consult any other sources, prior knowledge from outside "
+            f"this skill, or the internet. Keep the answer under 150 words.\n\n"
+            f"Question: {c['q']}"
+        )
+        try:
+            answer = claude_runner.send(
+                prompt=prompt,
+                session_key=f"canary-{version}-{i}",
+                timeout=180,
+            )
+        except Exception as e:
+            answer = f"[canary execution failed: {e}]"
+
+        lower = answer.lower()
+        missing = [r for r in c["required"] if r not in lower]
+        results.append({
+            "q": c["q"],
+            "required": c["required"],
+            "answer": answer,
+            "missing": missing,
+            "pass": len(missing) == 0,
+        })
+
+    overall = all(r["pass"] for r in results)
+    payload = {
+        "version": version,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "pass": overall,
+        "results": results,
+    }
+    _CANARY_RESULTS.write_text(
+        json.dumps(payload, indent=2), encoding="utf-8"
+    )
+    return payload
+
+
+def format_canary_summary(payload: dict) -> str:
+    """Format canary results for a Slack message."""
+    if payload.get("note"):
+        return f"Canaries: {payload['note']}"
+    results = payload.get("results", [])
+    passed = sum(1 for r in results if r["pass"])
+    total = len(results)
+    lines = [f"*Canary results: {passed}/{total} passed*"]
+    for r in results:
+        q_short = r["q"][:80] + ("..." if len(r["q"]) > 80 else "")
+        if r["pass"]:
+            lines.append(f"PASS: {q_short}")
+        else:
+            missing_str = ", ".join(f"`{m}`" for m in r["missing"])
+            lines.append(f"FAIL: {q_short}")
+            lines.append(f"     missing: {missing_str}")
+    return "\n".join(lines)
+
+
 def check_status() -> str:
     """Report compile status: new files since last compile, recommendation."""
     training_root = Path(config.VAULT_PATH) / "training"
@@ -77,10 +181,25 @@ def check_status() -> str:
     else:
         recommend = "No training files yet. Compile would be a no-op."
 
+    # Canary state for current version
+    canary_state = "not run"
+    if _CANARY_RESULTS.exists():
+        try:
+            payload = json.loads(_CANARY_RESULTS.read_text(encoding="utf-8"))
+            if payload.get("version") == current:
+                passed = sum(1 for r in payload["results"] if r["pass"])
+                total = len(payload["results"])
+                canary_state = f"{passed}/{total} passing" if payload["pass"] else f"FAILING ({passed}/{total})"
+            else:
+                canary_state = f"stale (last run on {payload.get('version', 'unknown')})"
+        except Exception:
+            canary_state = "unreadable"
+
     return (
         f"*Compile Status*\n"
         f"• Current version: {current}\n"
         f"• Last compile: {last_compile}\n"
+        f"• Canaries: {canary_state}\n"
         f"• Training files in corpus: {total_files}\n"
         f"  - primers/: {len(list((training_root / 'primers').glob('*.md'))) - (1 if (training_root / 'primers' / '.gitkeep').exists() else 0)}\n"
         f"  - frameworks/: {len(list((training_root / 'frameworks').glob('*.md'))) - (1 if (training_root / 'frameworks' / '.gitkeep').exists() else 0)}\n"
