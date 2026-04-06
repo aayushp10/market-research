@@ -150,36 +150,78 @@ def run_compile() -> str:
 
 
 def approve(version: str | None = None) -> str:
-    """Approve and publish a compiled version."""
+    """Approve and publish a compiled version. Deterministic — no LLM for file ops."""
+    import os
     ver = version or get_next_version()
     ver_dir = _COMPILED_DIR / ver
 
     if not ver_dir.exists():
         return f"Version {ver} not found in _compiled/. Nothing to approve."
 
+    # Canary gate — added in Part 3, will be a no-op until then
+    try:
+        canary_payload = run_canaries(ver)
+        if not canary_payload["pass"] and not canary_payload.get("note"):
+            return (
+                f"Canaries failed for {ver} — NOT publishing.\n\n"
+                f"{format_canary_summary(canary_payload)}\n\n"
+                f"Review `training/_compiled/credit-trading/canary_results.json`, "
+                f"then either fix the compile or `/compile reject {ver}` with a reason."
+            )
+    except NameError:
+        # run_canaries not yet defined (pre-Part 3)
+        pass
+
+    current_dir = _COMPILED_DIR / "current"
+
+    # 1. Wipe current/
+    if current_dir.exists():
+        shutil.rmtree(current_dir)
+    # 2. Copy v<N>/ into current/
+    shutil.copytree(ver_dir, current_dir)
+
+    # 3. Publish to the external skill directory if configured
+    publish_path = os.environ.get("SKILLS_PUBLISH_PATH")
+    published_to = None
+    if publish_path:
+        publish_dir = Path(publish_path)
+        if publish_dir.exists():
+            shutil.rmtree(publish_dir)
+        shutil.copytree(current_dir, publish_dir)
+        published_to = str(publish_dir)
+
+    # 4. Log the publish
+    log_file = _COMPILED_DIR / "publish_log.md"
+    ts = datetime.now(timezone.utc).isoformat()
+    files = sorted(
+        p.relative_to(current_dir).as_posix()
+        for p in current_dir.rglob("*") if p.is_file()
+    )
+    entry = (
+        f"\n## {ver} — {ts}\n"
+        f"- Published to: {published_to or '(not published — SKILLS_PUBLISH_PATH not set)'}\n"
+        f"- Files: {len(files)}\n"
+        + "\n".join(f"  - {f}" for f in files)
+        + "\n"
+    )
+    existing = log_file.read_text(encoding="utf-8") if log_file.exists() else "# Publish log\n"
+    log_file.write_text(existing + entry, encoding="utf-8")
+
+    # 5. Commit through a thin Claude call
     prompt = (
-        f"Approve and publish credit-trading {ver}.\n\n"
-        f"Steps:\n"
-        f"1. Delete the contents of training/_compiled/credit-trading/current/ entirely.\n"
-        f"2. Copy the FULL contents of training/_compiled/credit-trading/{ver}/ "
-        f"to training/_compiled/credit-trading/current/ ��� this includes SKILL.md AND "
-        f"the entire references/ subdirectory. The current/ directory must be an exact "
-        f"mirror of {ver}/.\n"
-        f"3. Create a .skill ZIP archive at training/_compiled/credit-trading/current.skill "
-        f"containing the current/ folder contents (SKILL.md + references/) — this is the "
-        f"portable format for sharing or external loading.\n"
-        f"4. If SKILLS_PUBLISH_PATH is set in .env, copy current.skill there.\n"
-        f"5. Log the publish to training/_compiled/credit-trading/publish_log.md "
-        f"including: version, timestamp, files updated, files unchanged.\n"
-        f"6. Commit: 'v2-compile: credit-trading {ver} published'\n"
-        f"7. Return confirmation with version, timestamp, list of files in current/, "
-        f"and publish path."
+        f"Git add and commit the publish of credit-trading {ver}. "
+        f"Commit message: 'v2-compile: credit-trading {ver} published'. "
+        f"Return a one-line confirmation."
+    )
+    commit_confirm = claude_runner.send(
+        prompt=prompt, session_key="compile-pipeline", timeout=60,
     )
 
-    return claude_runner.send(
-        prompt=prompt,
-        session_key="compile-pipeline",
-        timeout=120,
+    return (
+        f"credit-trading {ver} published\n"
+        f"- current/: {len(files)} files\n"
+        f"- Published to: {published_to or '(local only — SKILLS_PUBLISH_PATH not set)'}\n"
+        f"- {commit_confirm}"
     )
 
 
