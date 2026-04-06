@@ -1,0 +1,24 @@
+{
+  "hidden": true,
+  "hiddenList": [
+    "README.md",
+    "log.md",
+    "CLAUDE.md",
+    "_agent",
+    "concepts/CLAUDE.md",
+    "journal/_index",
+    "journal/CLAUDE.md",
+    "ledger/_index",
+    "ledger/CLAUDE.md",
+    "research/briefing-scope.md",
+    "research/_templates",
+    "research/_raw",
+    "research/_provenance",
+    "research/_index",
+    "training/CLAUDE.md",
+    "training/inbox",
+    "training/_provenance",
+    "training/_compiled",
+    "research/CLAUDE.md"
+  ]
+}

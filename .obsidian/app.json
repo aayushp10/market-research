@@ -1,6 +1,17 @@
 {
   "attachmentFolderPath": "_raw/assets/",
-  "userIgnoreFilters": ["_agent/", "_raw/", "_stubs/", ".git/"],
+  "userIgnoreFilters": [
+    "_raw/",
+    "_stubs/",
+    ".git/",
+    "_agent/**",
+    "_agent/",
+    "CLAUDE.md",
+    "**/CLAUDE.md",
+    "_templates/",
+    "log.md",
+    "README.md"
+  ],
   "newFileLocation": "folder",
   "newFileFolderPath": "_stubs"
 }
