@@ -22,21 +22,28 @@ _COMPILED_DIR = Path(config.VAULT_PATH) / "training" / "_compiled" / "credit-tra
 _PROVENANCE_DIR = Path(config.VAULT_PATH) / "training" / "_provenance" / "credit-trading"
 
 
+def _parse_version(v: str) -> tuple[int, int]:
+    """Parse 'v1.2' -> (1, 2). Returns (0, 0) for invalid."""
+    try:
+        major, minor = v[1:].split(".")
+        return (int(major), int(minor))
+    except (ValueError, IndexError):
+        return (0, 0)
+
+
 def get_current_version() -> str:
-    """Read the current version from the latest directory in _compiled/."""
-    versions = sorted(
-        [d.name for d in _COMPILED_DIR.iterdir()
-         if d.is_dir() and d.name.startswith("v") and d.name != "current"],
-        key=lambda v: float(v[1:]) if v[1:].replace(".", "").isdigit() else 0,
-    )
-    return versions[-1] if versions else "v1.0"
+    versions = [
+        d.name for d in _COMPILED_DIR.iterdir()
+        if d.is_dir() and d.name.startswith("v") and d.name != "current"
+    ]
+    if not versions:
+        return "v1.0"
+    return max(versions, key=_parse_version)
 
 
 def get_next_version() -> str:
-    """Compute the next version number."""
-    current = get_current_version()
-    major, minor = current[1:].split(".")
-    return f"v{major}.{int(minor) + 1}"
+    major, minor = _parse_version(get_current_version())
+    return f"v{major}.{minor + 1}"
 
 
 def check_status() -> str:
