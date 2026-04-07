@@ -728,11 +728,20 @@ def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: 
             if is_confirm and task_status == "pending_user":
                 client.chat_postMessage(
                     channel=channel, thread_ts=thread_ts,
-                    text=f"Executing deep dive on {target}... this takes 10-15 minutes.",
+                    text=f"Fetching sources for {target}... then writing the dive.",
                 )
                 try:
+                    # Phase 1: fetch sources (~10 min)
+                    fetch_result = deep_dive.fetch_sources(
+                        target, session_key=session_key,
+                    )
+                    client.chat_postMessage(
+                        channel=channel, thread_ts=thread_ts,
+                        text=f"Sources fetched. Writing deep dive... (10-15 min)\n\n{fetch_result}",
+                    )
+                    # Phase 2: write the dive (~15 min)
                     result = deep_dive.execute_dive(
-                        target, session_key=session_key, web_search_approved=True,
+                        target, session_key=session_key,
                     )
                     client.chat_postMessage(
                         channel=channel, text=result, thread_ts=thread_ts,

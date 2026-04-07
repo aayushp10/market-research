@@ -13,7 +13,8 @@ import config
 
 logger = logging.getLogger(__name__)
 
-_DIVE_TIMEOUT = 900  # 15 minutes — deep dives are long
+_FETCH_TIMEOUT = 600  # 10 minutes — web searches + save
+_DIVE_TIMEOUT = 900   # 15 minutes — writing the deep dive
 
 
 def scope_dive(target: str, session_key: str | None = None) -> str:
@@ -51,37 +52,40 @@ def scope_dive(target: str, session_key: str | None = None) -> str:
     )
 
 
-def execute_dive(target: str, session_key: str | None = None,
-                 web_search_approved: bool = False,
-                 search_queries: list[str] | None = None) -> str:
+def fetch_sources(target: str, session_key: str | None = None) -> str:
     """
-    Execute the deep dive after scope approval.
+    Phase 1: Run the web searches proposed in the scope step.
+    Saves fetched content to research/_raw/inbox/to-tag/.
+    Returns a summary of what was fetched.
+    """
+    prompt = (
+        f"Run the web searches you proposed in the scope for {target}.\n\n"
+        f"For each search result:\n"
+        f"1. Fetch the content\n"
+        f"2. Save to research/_raw/inbox/to-tag/ with a descriptive kebab-case "
+        f"filename (no dates, no timestamps)\n"
+        f"3. Create frontmatter with origin: web-fetched-during-deep-dive, "
+        f"plus source_type, source_name, date_added, as_of_date, tags, tickers, sectors\n\n"
+        f"Do NOT write the deep dive yet. Only fetch and save sources.\n"
+        f"Return a brief summary: how many sources fetched, their filenames, "
+        f"and any searches that failed or returned no useful content."
+    )
+
+    return claude_runner.send(
+        prompt=prompt,
+        session_key=session_key or f"dive-{target.lower().replace(' ', '-')}",
+        timeout=_FETCH_TIMEOUT,
+    )
+
+
+def execute_dive(target: str, session_key: str | None = None) -> str:
+    """
+    Phase 2: Write the deep dive from existing/fetched sources.
     Returns the completion summary for Slack.
     """
-    web_instruction = ""
-    if web_search_approved and search_queries:
-        queries_str = "\n".join(f"  - {q}" for q in search_queries)
-        web_instruction = (
-            f"\n\nApproved web searches:\n{queries_str}\n"
-            f"Run these searches. For each result:\n"
-            f"1. Fetch the content\n"
-            f"2. Save to research/_raw/inbox/to-tag/ with a descriptive filename\n"
-            f"3. Create a frontmatter sidecar with origin: web-fetched-during-deep-dive\n"
-            f"4. Use the fetched content as a source in the dive\n"
-        )
-    elif web_search_approved:
-        web_instruction = (
-            f"\n\nWeb search was approved. Run the searches you proposed in the scope. "
-            f"For each result:\n"
-            f"1. Fetch the content\n"
-            f"2. Save to research/_raw/inbox/to-tag/ with a descriptive filename\n"
-            f"3. Create a frontmatter sidecar with origin: web-fetched-during-deep-dive\n"
-            f"4. Use the fetched content as a source in the dive\n"
-        )
-
     prompt = (
-        f"Execute the deep dive on: {target}\n\n"
-        f"Scope was approved. Now write the artifact.\n\n"
+        f"Now write the deep dive on: {target}\n\n"
+        f"Sources have been fetched (or already existed). Write the artifact.\n\n"
         f"Rules (from research/CLAUDE.md and root CLAUDE.md):\n"
         f"1. Apply the credit-trading skill's methodology (auto-loaded). "
         f"If this is a BDC, the bdc-knowledge skill should also be active.\n"
@@ -102,7 +106,6 @@ def execute_dive(target: str, session_key: str | None = None,
         f"11. Commit: 'v2-research: deep dive on {target} — <summary>'\n"
         f"12. Return a summary: artifact path, key conclusions, concepts invoked, sources cited.\n"
         f"    Keep under 300 words."
-        f"{web_instruction}"
     )
 
     return claude_runner.send(
