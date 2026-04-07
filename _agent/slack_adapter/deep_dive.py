@@ -48,7 +48,7 @@ def scope_dive(target: str, session_key: str | None = None) -> str:
     return claude_runner.send(
         prompt=prompt,
         session_key=session_key or f"dive-{target.lower().replace(' ', '-')}",
-        timeout=120,
+        timeout=300,
     )
 
 
