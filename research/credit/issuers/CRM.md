@@ -188,7 +188,7 @@ Standard IG senior unsecured indenture:
 
 ## Views
 
-- [[research/credit/deep-dives/2026-04-06-crm-financial-policy-shift|2026-04-06 Deep Dive: Financial Policy Shift & AI Disruption Risk]] — Three-lens evaluation, scenario analysis, duration-dependent disruption risk framework. Status: draft, pending review.
+- [[research/credit/deep-dives/crm-financial-policy-shift|Deep Dive: Financial Policy Shift & AI Disruption Risk]] — Three-lens evaluation, scenario analysis, duration-dependent disruption risk framework. Status: draft, pending review.
 
 ## Confidence and what would change my mind
 

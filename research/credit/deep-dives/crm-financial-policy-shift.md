@@ -1,6 +1,7 @@
 ---
 ticker: CRM
 name: Salesforce, Inc.
+issuer_page: "[[research/credit/issuers/CRM]]"
 type: deep-dive
 date: 2026-04-06
 status: draft

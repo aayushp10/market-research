@@ -358,8 +358,9 @@ Aayush can `git diff` any change before or after the fact.
 4. Ingest any web-fetched sources through the full tagging flow before using them.
 5. Write the dive. Cite every claim to a raw source. Enforce facts/views firewall.
 6. Create concept stubs inline as needed.
-7. Add `## Confidence and what would change my mind` at the end.
-8. Commit and update indices.
+7. Link bidirectionally: add `issuer_page: "[[research/credit/issuers/TICKER]]"` to the deep dive's frontmatter, and add a wikilink to the deep dive in the issuer page's `## Views` section. If the issuer page doesn't exist, create it from the template first.
+8. Add `## Confidence and what would change my mind` at the end.
+9. Commit and update indices.
 
 ### When drafting a briefing
 
