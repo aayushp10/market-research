@@ -194,7 +194,7 @@ def apply_correction(file_path_or_slug: str, inbox_type: str, user_reply: str) -
     The Claude Code session maintains context from the proposal step,
     so we just send the user's reply as a continuation.
     """
-    stem = Path(file_path_or_slug).stem if "/" in file_path_or_slug else file_path_or_slug
+    stem = Path(file_path_or_slug).stem
 
     prompt = (
         f"Aayush replied to the ingestion proposal:\n\n{user_reply}\n\n"
@@ -207,12 +207,12 @@ def apply_correction(file_path_or_slug: str, inbox_type: str, user_reply: str) -
     result = claude_runner.send(
         prompt=prompt,
         session_key=f"ingest-{inbox_type}-{stem}",
-        timeout=60,
+        timeout=120,
     )
     return result
 
 
-def finalize_and_file(file_path_or_slug: str, inbox_type: str) -> str:
+def finalize_and_file(file_path_or_slug: str, inbox_type: str, confirmed_yaml: str | None = None) -> str:
     """
     Write confirmed frontmatter, move file to final location, commit.
     Returns a confirmation message for Slack.
@@ -220,7 +220,7 @@ def finalize_and_file(file_path_or_slug: str, inbox_type: str) -> str:
     For training/research: moves from to-tag/ → final content folder.
     For journal: writes the entry file to journal/entries/.
     """
-    stem = Path(file_path_or_slug).stem if "/" in file_path_or_slug else file_path_or_slug
+    stem = Path(file_path_or_slug).stem
 
     if inbox_type == "journal":
         prompt = (
@@ -249,8 +249,16 @@ def finalize_and_file(file_path_or_slug: str, inbox_type: str) -> str:
                 "tickers, and sectors"
             )
 
+        yaml_context = ""
+        if confirmed_yaml:
+            yaml_context = (
+                f"The user confirmed the following frontmatter:\n\n"
+                f"{confirmed_yaml}\n\n"
+            )
+
         prompt = (
             f"Finalize the ingestion.\n\n"
+            f"{yaml_context}"
             f"Steps:\n"
             f"1. Write the confirmed frontmatter into the file (for markdown) or "
             f"create a sidecar .md file next to it (for PDFs/images/binary).\n"

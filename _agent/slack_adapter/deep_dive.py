@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 _DIVE_TIMEOUT = 900  # 15 minutes — deep dives are long
 
 
-def scope_dive(target: str) -> str:
+def scope_dive(target: str, session_key: str | None = None) -> str:
     """
     Propose the scope of a deep dive. Returns the proposal text
     for posting to a Slack thread for Aayush's confirmation.
@@ -46,12 +46,13 @@ def scope_dive(target: str) -> str:
 
     return claude_runner.send(
         prompt=prompt,
-        session_key=f"dive-{target.lower().replace(' ', '-')}",
+        session_key=session_key or f"dive-{target.lower().replace(' ', '-')}",
         timeout=120,
     )
 
 
-def execute_dive(target: str, web_search_approved: bool = False,
+def execute_dive(target: str, session_key: str | None = None,
+                 web_search_approved: bool = False,
                  search_queries: list[str] | None = None) -> str:
     """
     Execute the deep dive after scope approval.
@@ -63,6 +64,15 @@ def execute_dive(target: str, web_search_approved: bool = False,
         web_instruction = (
             f"\n\nApproved web searches:\n{queries_str}\n"
             f"Run these searches. For each result:\n"
+            f"1. Fetch the content\n"
+            f"2. Save to research/_raw/inbox/to-tag/ with a descriptive filename\n"
+            f"3. Create a frontmatter sidecar with origin: web-fetched-during-deep-dive\n"
+            f"4. Use the fetched content as a source in the dive\n"
+        )
+    elif web_search_approved:
+        web_instruction = (
+            f"\n\nWeb search was approved. Run the searches you proposed in the scope. "
+            f"For each result:\n"
             f"1. Fetch the content\n"
             f"2. Save to research/_raw/inbox/to-tag/ with a descriptive filename\n"
             f"3. Create a frontmatter sidecar with origin: web-fetched-during-deep-dive\n"
@@ -93,12 +103,13 @@ def execute_dive(target: str, web_search_approved: bool = False,
 
     return claude_runner.send(
         prompt=prompt,
-        session_key=f"dive-{target.lower().replace(' ', '-')}",
+        session_key=session_key or f"dive-{target.lower().replace(' ', '-')}",
         timeout=_DIVE_TIMEOUT,
     )
 
 
-def propose_web_search(target: str, existing_sources: int, oldest_days: int) -> str:
+def propose_web_search(target: str, existing_sources: int, oldest_days: int,
+                       session_key: str | None = None) -> str:
     """
     Generate a web search proposal when existing sources are insufficient.
     """
@@ -118,6 +129,6 @@ def propose_web_search(target: str, existing_sources: int, oldest_days: int) -> 
 
     return claude_runner.send(
         prompt=prompt,
-        session_key=f"dive-{target.lower().replace(' ', '-')}",
+        session_key=session_key or f"dive-{target.lower().replace(' ', '-')}",
         timeout=60,
     )

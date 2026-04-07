@@ -20,6 +20,7 @@ class Intent:
     QUESTION = "question"
     JOURNAL_ENTRY = "journal_entry"
     RULE_PROPOSAL = "rule_proposal"
+    DEEP_DIVE = "deep_dive"
     STATUS = "status"
     UNKNOWN = "unknown"
 
@@ -30,6 +31,9 @@ _RULE_KEYWORDS = re.compile(
 )
 _STATUS_KEYWORDS = re.compile(
     r"^(status|health|ping)\s*$", re.I
+)
+_DEEP_DIVE_KEYWORDS = re.compile(
+    r"\b(deep\s*dive|tearsheet|full\s+analysis|credit\s+profile)\b", re.I
 )
 _QUESTION_MARKERS = re.compile(
     r"^(what|how|why|when|where|who|is\s|are\s|do\s|does\s|can\s|could\s|should\s)", re.I
@@ -56,6 +60,10 @@ def classify(channel_type: str, text: str) -> str:
     # Rule proposal keywords — any channel
     if _RULE_KEYWORDS.search(text_stripped):
         return Intent.RULE_PROPOSAL
+
+    # Deep dive keywords — #research channel
+    if channel_type == "research" and _DEEP_DIVE_KEYWORDS.search(text_stripped):
+        return Intent.DEEP_DIVE
 
     # Channel-specific defaults
     if channel_type == "journal":
@@ -86,7 +94,9 @@ def _classify_with_claude(channel_type: str, text: str) -> str:
     """Use Claude Code to classify an ambiguous message."""
     prompt = (
         f"Classify this Slack message from the #{channel_type} channel into "
-        f"exactly one of: task, question, ingestion, rule_proposal, status.\n\n"
+        f"exactly one of: task, question, ingestion, rule_proposal, deep_dive, status.\n\n"
+        f"Use deep_dive if the user is asking for a deep dive, tearsheet, full credit "
+        f"analysis, or credit profile on a specific name or topic.\n\n"
         f"Message: {text[:500]}\n\n"
         f"Reply with ONLY the classification word, nothing else."
     )
@@ -96,7 +106,7 @@ def _classify_with_claude(channel_type: str, text: str) -> str:
         timeout=30,
     )
     result_lower = result.strip().lower()
-    valid = {Intent.TASK, Intent.QUESTION, Intent.INGESTION, Intent.RULE_PROPOSAL, Intent.STATUS}
+    valid = {Intent.TASK, Intent.QUESTION, Intent.INGESTION, Intent.RULE_PROPOSAL, Intent.DEEP_DIVE, Intent.STATUS}
     if result_lower in valid:
         return result_lower
     return Intent.QUESTION

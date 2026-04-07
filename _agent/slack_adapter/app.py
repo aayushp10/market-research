@@ -20,6 +20,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 import briefing
 import claude_runner
 import config
+import deep_dive
 import inbox_handler
 import ingestion
 import intent_router
@@ -64,6 +65,24 @@ def _post_ops_error(client, err: Exception, context: str) -> None:
         )
     except Exception:
         logger.exception("Failed to post error to #agent-ops")
+
+
+def _extract_dive_target(text: str) -> str | None:
+    """
+    Extract the ticker or topic from a free-form deep dive request.
+    E.g. "Make me a deep dive about CRM" → "CRM"
+         "deep dive on Oracle credit" → "Oracle credit"
+    Returns None if no target can be extracted.
+    """
+    patterns = [
+        r"(?:deep\s*dive|tearsheet|full\s+analysis|credit\s+profile)\s+(?:on|about|for|into)\s+(.+)",
+        r"(?:make|write|do|run|start)\s+(?:me\s+)?(?:a\s+)?(?:deep\s*dive|tearsheet|full\s+analysis|credit\s+profile)\s+(?:on|about|for|into)\s+(.+)",
+    ]
+    for pattern in patterns:
+        m = re.search(pattern, text, re.I)
+        if m:
+            return m.group(1).strip().rstrip(".")
+    return None
 
 
 def _parse_command(text: str) -> tuple[str | None, str]:
@@ -353,24 +372,25 @@ def _start_deep_dive(client, channel: str, ts: str, target: str) -> None:
     """Kick off a deep dive in a new thread."""
     resp = client.chat_postMessage(
         channel=channel,
-        text=f"*Deep dive: {target}* — scoping...",
+        text=f"Deep dive: {target} — scoping...",
     )
     thread_ts = resp["ts"]
+    session_key = f"research-{thread_ts}"
     thread_state.create(
         thread_ts=thread_ts,
         channel="research",
         task_type="deep_dive",
         target=target,
+        session_key=session_key,
     )
-    _run_agent_task(
-        client, channel, thread_ts,
-        f"Start a deep dive on: {target}\n\n"
-        f"Per research/CLAUDE.md deep dive discipline:\n"
-        f"1. Propose scope: target artifact path, sources found in research/_raw/, "
-        f"whether web search is needed, concepts expected.\n"
-        f"2. Wait for Aayush's confirmation before executing.\n"
-        f"Post the scope proposal now.",
-    )
+    try:
+        result = deep_dive.scope_dive(target, session_key=session_key)
+        client.chat_postMessage(channel=channel, text=result, thread_ts=thread_ts)
+        thread_state.update(thread_ts, status="pending_user")
+    except Exception as e:
+        logger.exception("Deep dive scoping failed")
+        _post_error(client, channel, thread_ts, e)
+        thread_state.update(thread_ts, status="error")
 
 
 def _trigger_briefing(client, channel: str, ts: str, topic: str | None = None) -> None:
@@ -633,13 +653,24 @@ def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: 
                     channel=channel, text="Filing...", thread_ts=thread_ts,
                 )
                 try:
+                    confirmed_yaml = state.get("metadata", {}).get("last_proposal")
                     result = ingestion.finalize_and_file(
                         state.get("target", ""), inbox_type,
+                        confirmed_yaml=confirmed_yaml,
                     )
                     client.chat_postMessage(
                         channel=channel, text=result, thread_ts=thread_ts,
                     )
-                    thread_state.complete(thread_ts)
+                    # Verify the file was actually moved before marking complete
+                    target = state.get("target", "")
+                    if target and Path(target).exists():
+                        logger.warning("File still in to-tag/ after finalize: %s", target)
+                        client.chat_postMessage(
+                            channel=channel, thread_ts=thread_ts,
+                            text="Filing failed — file is still in to-tag/. Reply to retry.",
+                        )
+                    else:
+                        thread_state.complete(thread_ts)
                 except Exception as e:
                     logger.exception("Ingestion finalize failed")
                     _post_error(client, channel, thread_ts, e)
@@ -652,6 +683,8 @@ def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: 
                     client.chat_postMessage(
                         channel=channel, text=result, thread_ts=thread_ts,
                     )
+                    # Store the latest proposal so finalize can use it
+                    thread_state.update(thread_ts, metadata={"last_proposal": result})
                     # Stays in pending_user for the final confirm
                 except Exception as e:
                     logger.exception("Ingestion correction failed")
@@ -682,6 +715,46 @@ def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: 
             except Exception as e:
                 logger.exception("Briefing review failed")
                 _post_error(client, channel, thread_ts, e)
+            return
+
+        # ---- Deep dive threads: scope confirm → execute ----
+        if task_type == "deep_dive":
+            target = state.get("target", "")
+            is_confirm = text_lower in (
+                "confirmed", "confirm", "yes", "ok", "lgtm", "looks good",
+                "proceed", "go ahead", "execute", "run it",
+                "i confirm all of the above", "i confirm",
+            )
+            if is_confirm and task_status == "pending_user":
+                client.chat_postMessage(
+                    channel=channel, thread_ts=thread_ts,
+                    text=f"Executing deep dive on {target}... this takes 10-15 minutes.",
+                )
+                try:
+                    result = deep_dive.execute_dive(
+                        target, session_key=session_key, web_search_approved=True,
+                    )
+                    client.chat_postMessage(
+                        channel=channel, text=result, thread_ts=thread_ts,
+                    )
+                    thread_state.complete(thread_ts)
+                except Exception as e:
+                    logger.exception("Deep dive execution failed")
+                    _post_error(client, channel, thread_ts, e)
+            else:
+                # Non-confirm reply (scope adjustments, questions) — continue session
+                try:
+                    result = claude_runner.send(
+                        prompt=text, session_key=session_key,
+                        timeout=deep_dive._DIVE_TIMEOUT,
+                    )
+                    client.chat_postMessage(
+                        channel=channel, text=result, thread_ts=thread_ts,
+                    )
+                    thread_state.update(thread_ts)
+                except Exception as e:
+                    logger.exception("Deep dive thread reply failed")
+                    _post_error(client, channel, thread_ts, e)
             return
 
         # ---- Generic thread continuation ----
@@ -726,6 +799,12 @@ def _handle_freeform(client, channel: str, ch_type: ChannelType, ts: str, text: 
     if intent == intent_router.Intent.RULE_PROPOSAL:
         _handle_rule_proposal(client, channel, ts, text)
         return
+
+    if intent == intent_router.Intent.DEEP_DIVE:
+        target = _extract_dive_target(text)
+        if target:
+            _start_deep_dive(client, channel, ts, target)
+            return
 
     # Default: run as an agent task in a thread
     _run_agent_task(client, channel, ts, text)
