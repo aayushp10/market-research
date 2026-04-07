@@ -87,4 +87,4 @@ Blue Owl-sponsored public BDC focused on technology and software lending. Recent
 
 ## Views
 
-*No dated theses yet. When a situation or theme file is created for OTF, link it here.*
+- [[research/credit/deep-dives/otic-non-traded-redemption-stress]] — OTIC redemption stress deep dive; Section 5 covers read-across to OTF (worst public BDC exposure to same software distress wave)

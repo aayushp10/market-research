@@ -140,4 +140,4 @@ No raw sources filed yet. All data seeded from prior conversations.
 
 ## Views
 
-No views filed yet. Situation or theme files will be linked here when created.
+- [[research/credit/deep-dives/otic-non-traded-redemption-stress]] — OTIC redemption stress deep dive; Section 5 covers read-across to OBDC (sponsor contagion, mark credibility, fee-revenue transmission)
