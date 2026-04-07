@@ -3,7 +3,7 @@ predicted_date: 2026-04-04
 revisit_date: 2026-04-10
 prediction: "Public BDC unsecured paper (OBDC/OTF) decompresses vs HY index on sponsor-brand contagion and software-exposure read-through from historic Q1 non-traded BDC redemption prints (OTIC 40.7%, OCIC 21.9%)"
 confidence: medium
-source: "[[research/briefings/2026-04-04]]"
+source: "[[research/briefings/briefing-2026-04-04]]"
 domain_path: credit/themes
 tickers: [OBDC, OTF, OTIC, OCIC]
 sectors: [bdc-unsecured, private-credit]

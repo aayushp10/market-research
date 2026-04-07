@@ -2,9 +2,9 @@
 date: 2026-04-07
 tags: [narrative, regime, iran, hormuz, south-pars, cpi, deadline, ceasefire, escalation]
 sources:
-  - "[[research/_raw/macro/events/20260406-iran-hormuz-deadline-extension-weekend]]"
-  - "[[research/_raw/macro/rates/20260407-march-cpi-preview]]"
-  - "[[research/briefings/2026-04-07]]"
+  - "[[research/_raw/macro/events/iran-hormuz-deadline-extension-weekend]]"
+  - "[[research/_raw/macro/rates/march-cpi-preview]]"
+  - "[[research/briefings/briefing-2026-04-07]]"
 ---
 
 # Macro Narrative Snapshot — 2026-04-07

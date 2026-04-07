@@ -2,8 +2,8 @@
 date: 2026-04-04
 tags: [narrative, regime, iran, bdc-stress, ig-rally, macro-seed]
 sources:
-  - "[[research/briefings/2026-04-04]]"
-  - "[[research/_raw/credit/markets/citi-credit-snapshot-ig-2026-04-03]]"
+  - "[[research/briefings/briefing-2026-04-04]]"
+  - "[[research/_raw/credit/markets/citi-credit-snapshot-ig]]"
 seeded: true
 seeded_date: 2026-04-05
 ---

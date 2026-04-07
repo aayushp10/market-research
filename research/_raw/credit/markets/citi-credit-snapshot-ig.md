@@ -24,4 +24,4 @@ Weekly IG credit market overview from Citi credit strategy desk. Covers OAS leve
 - Banks −4 MTD (sector leader), Tech −4, Healthcare −5
 - Fin Svcs YTD +21, Insurance YTD +14
 
-**Companion file:** `citi-credit-snapshot-ig-2026-04-03.pdf`
+**Companion file:** `citi-credit-snapshot-ig.pdf`

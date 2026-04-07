@@ -10,7 +10,6 @@ Never overwrites existing files. Sanitizes filenames.
 
 import logging
 import re
-from datetime import datetime
 from pathlib import Path
 
 import requests
@@ -71,9 +70,8 @@ def handle_file_upload(file_info: dict, inbox_type: str) -> tuple[str, Path]:
     if not url:
         raise ValueError(f"No download URL in file_info: {file_info.get('id')}")
 
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     safe_name = _sanitize(original_name)
-    filename = f"{timestamp}-{safe_name}"
+    filename = safe_name if safe_name else "upload"
     dest = _unique_path(inbox_dir, filename)
 
     logger.info("inbox_handler: downloading %s → %s (%s)", url, dest.name, inbox_type)

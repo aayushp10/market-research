@@ -28,10 +28,10 @@ last_updated: 2026-04-06
 
 *Updated 2026-04-06.*
 
-- **Ratings:** A2 (Moody's, downgraded from A1 Mar 2026) / A+ negative outlook (S&P). [[20260310-crm-ratings-moodys-sp|Rating action detail]].
-- **Key spread levels:** 10yr tranche (2036, 5.550%) priced at ~135bps over Treasuries; 40yr tranche (2066, 6.700%) at ~185bps over. New issue tightening was 10bps vs typical 30bps — weak demand signal. [[20260313-crm-bond-demand-dynamics|Demand detail]].
-- **Cap structure snapshot:** ~$33.5B pro forma total debt post-March 2026 issuance ($25B new senior notes + ~$8.5B legacy bonds; $6B term loan replaces existing facilities). ~$7.3B cash (pre-ASR deployment). Pro forma gross leverage ~2.0–2.1x; net leverage ~1.6–1.7x (using FY2026 OCF proxy for EBITDA). Pre-deal leverage was ~0.6x per S&P. [[20260313-crm-25b-bond-offering-8k|Full tranche detail]].
-- **Fundamentals:** FY2026 revenue $41.5B (+10% YoY), FCF $14.4B (+16%), non-GAAP operating margin 34.1%. RPO $72.4B. Agentforce ARR $800M (+169%). [[20260225-crm-q4-fy2026-earnings|Earnings detail]].
+- **Ratings:** A2 (Moody's, downgraded from A1 Mar 2026) / A+ negative outlook (S&P). [[crm-ratings-moodys-sp|Rating action detail]].
+- **Key spread levels:** 10yr tranche (2036, 5.550%) priced at ~135bps over Treasuries; 40yr tranche (2066, 6.700%) at ~185bps over. New issue tightening was 10bps vs typical 30bps — weak demand signal. [[crm-bond-demand-dynamics|Demand detail]].
+- **Cap structure snapshot:** ~$33.5B pro forma total debt post-March 2026 issuance ($25B new senior notes + ~$8.5B legacy bonds; $6B term loan replaces existing facilities). ~$7.3B cash (pre-ASR deployment). Pro forma gross leverage ~2.0–2.1x; net leverage ~1.6–1.7x (using FY2026 OCF proxy for EBITDA). Pre-deal leverage was ~0.6x per S&P. [[crm-25b-bond-offering-8k|Full tranche detail]].
+- **Fundamentals:** FY2026 revenue $41.5B (+10% YoY), FCF $14.4B (+16%), non-GAAP operating margin 34.1%. RPO $72.4B. Agentforce ARR $800M (+169%). [[crm-q4-fy2026-earnings|Earnings detail]].
 - **Relative value:** Post-deal leverage makes CRM the second most levered name in enterprise software IG (behind ORCL at 14.2x), but still moderate at ~2x. Front-end bonds (2028–2031) reasonably attractive; back-end (2046–2066) carries AI disruption risk premium that may be insufficient.
 - **Catalyst calendar:** FY2027 Q1 earnings (~late May 2026); ASR final settlement Q4 2026; potential further buyback debt if management continues current financial policy trajectory.
 
@@ -52,7 +52,7 @@ Post-March 2026 issuance. All new notes are senior unsecured.
 | 2056 Notes | $3.75B | 6.550% | Mar 2056 | |
 | 2066 Notes | $1.0B | 6.700% | Mar 2066 | 40yr; weakest demand, only 10bps tightening |
 
-Citation: [[research/_raw/credit/issuers/20260313-crm-25b-bond-offering-8k|SEC 8-K filing]]
+Citation: [[research/_raw/credit/issuers/crm-25b-bond-offering-8k|SEC 8-K filing]]
 
 ### Legacy Bonds (~$8.5B outstanding, from 2021 Slack Acquisition)
 
@@ -66,7 +66,7 @@ Citation: [[research/_raw/credit/issuers/20260313-crm-25b-bond-offering-8k|SEC 8
 
 Note: The $1B 0.625% 2024 notes from the original 2021 issuance have matured. Legacy coupons are dramatically lower than new issue coupons, reflecting the rate environment shift.
 
-Citation: [[research/_raw/credit/issuers/20260313-crm-25b-bond-offering-8k|SEC 8-K (pre-existing debt reference)]]
+Citation: [[research/_raw/credit/issuers/crm-25b-bond-offering-8k|SEC 8-K (pre-existing debt reference)]]
 
 ### Term Loan
 
@@ -96,7 +96,7 @@ Salesforce is the world's largest CRM platform and the dominant enterprise cloud
 - **RPO backlog:** $72.4B provides ~1.7 years of revenue visibility. cRPO of $35.1B (+16%) indicates near-term demand remains strong.
 - **AI pivot:** Agentforce (agentic AI) is the strategic response to AI disruption concerns. ARR of $800M growing 169% is encouraging but still small relative to the $41.5B revenue base (~2%).
 
-Citation: [[research/_raw/credit/issuers/20260225-crm-q4-fy2026-earnings|Q4 FY2026 earnings]]
+Citation: [[research/_raw/credit/issuers/crm-q4-fy2026-earnings|Q4 FY2026 earnings]]
 
 ## Sector context
 
@@ -111,7 +111,7 @@ The March 2026 financial policy shift changes CRM's position in the sector:
 
 CRM is now the highest-leveraged A-rated enterprise software credit, a distinction it did not hold before March 2026. The market is treating it accordingly — wider spreads than the rating alone would suggest.
 
-Citation: [[research/_raw/credit/issuers/20260313-crm-bond-demand-dynamics|Peer leverage comparison]]
+Citation: [[research/_raw/credit/issuers/crm-bond-demand-dynamics|Peer leverage comparison]]
 
 ## Three-Lens Credit Evaluation
 
@@ -152,7 +152,7 @@ Spreads are approximately fair for the current risk profile. The front-end (2028
 
 **Divergence:** Fundamentals Strategic + RV Market Perform → No compelling alpha. Carry is acceptable. Monitor for further financial policy shifts (which would widen) or AI strategy execution proof points (which could tighten).
 
-Citation: [[research/_raw/credit/issuers/20260313-crm-bond-demand-dynamics|Demand and spread detail]]
+Citation: [[research/_raw/credit/issuers/crm-bond-demand-dynamics|Demand and spread detail]]
 
 ### Lens 3: Documentation
 
@@ -167,9 +167,9 @@ Standard IG senior unsecured indenture:
 
 ## Recent developments
 
-- **2026-03-13:** Completed $25B senior notes offering across 8 tranches (2028–2066) to fund $50B ASR. Weak demand — 1.4x coverage, minimal spread tightening on long end. Citation: [[research/_raw/credit/issuers/20260313-crm-25b-bond-offering-8k|SEC 8-K]], [[research/_raw/credit/issuers/20260313-crm-bond-demand-dynamics|Demand dynamics]]
-- **2026-03-10:** Moody's downgraded CRM to A2 from A1; S&P revised outlook to Negative (A+ maintained). Both cited financial policy shift — higher tolerance for balance sheet leverage to fund shareholder returns. Citation: [[research/_raw/credit/issuers/20260310-crm-ratings-moodys-sp|Rating actions]]
-- **2026-02-25:** Reported record Q4 FY2026 results: $11.2B revenue (+12%), $5.32B FCF. Full year FY2026: $41.5B revenue, $14.4B FCF. Announced $50B buyback program and ~6% dividend increase. Guided FY2027 to $45.8–$46.2B revenue. Citation: [[research/_raw/credit/issuers/20260225-crm-q4-fy2026-earnings|Q4 FY2026 earnings]]
+- **2026-03-13:** Completed $25B senior notes offering across 8 tranches (2028–2066) to fund $50B ASR. Weak demand — 1.4x coverage, minimal spread tightening on long end. Citation: [[research/_raw/credit/issuers/crm-25b-bond-offering-8k|SEC 8-K]], [[research/_raw/credit/issuers/crm-bond-demand-dynamics|Demand dynamics]]
+- **2026-03-10:** Moody's downgraded CRM to A2 from A1; S&P revised outlook to Negative (A+ maintained). Both cited financial policy shift — higher tolerance for balance sheet leverage to fund shareholder returns. Citation: [[research/_raw/credit/issuers/crm-ratings-moodys-sp|Rating actions]]
+- **2026-02-25:** Reported record Q4 FY2026 results: $11.2B revenue (+12%), $5.32B FCF. Full year FY2026: $41.5B revenue, $14.4B FCF. Announced $50B buyback program and ~6% dividend increase. Guided FY2027 to $45.8–$46.2B revenue. Citation: [[research/_raw/credit/issuers/crm-q4-fy2026-earnings|Q4 FY2026 earnings]]
 
 ## Open questions
 
@@ -181,10 +181,10 @@ Standard IG senior unsecured indenture:
 
 ## Sources
 
-- [[research/_raw/credit/issuers/20260225-crm-q4-fy2026-earnings|20260225-crm-q4-fy2026-earnings.md]] — Q4 FY2026 earnings, full year financials, FY2027 guidance, AI metrics
-- [[research/_raw/credit/issuers/20260313-crm-25b-bond-offering-8k|20260313-crm-25b-bond-offering-8k.md]] — $25B bond offering details, all 8 tranches, ASR structure, term loan refinancing, pre-existing debt
-- [[research/_raw/credit/issuers/20260310-crm-ratings-moodys-sp|20260310-crm-ratings-moodys-sp.md]] — Moody's downgrade to A2, S&P negative outlook, rating rationale
-- [[research/_raw/credit/issuers/20260313-crm-bond-demand-dynamics|20260313-crm-bond-demand-dynamics.md]] — Bond sale demand dynamics, order book, spread performance, investor concerns, peer leverage comparison
+- [[research/_raw/credit/issuers/crm-q4-fy2026-earnings|crm-q4-fy2026-earnings.md]] — Q4 FY2026 earnings, full year financials, FY2027 guidance, AI metrics
+- [[research/_raw/credit/issuers/crm-25b-bond-offering-8k|crm-25b-bond-offering-8k.md]] — $25B bond offering details, all 8 tranches, ASR structure, term loan refinancing, pre-existing debt
+- [[research/_raw/credit/issuers/crm-ratings-moodys-sp|crm-ratings-moodys-sp.md]] — Moody's downgrade to A2, S&P negative outlook, rating rationale
+- [[research/_raw/credit/issuers/crm-bond-demand-dynamics|crm-bond-demand-dynamics.md]] — Bond sale demand dynamics, order book, spread performance, investor concerns, peer leverage comparison
 
 ## Views
 

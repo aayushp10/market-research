@@ -196,6 +196,18 @@ Wikilinks are a promise that the target exists. Speculative linking pollutes the
 
 7. **If you're uncertain which folder a page belongs in, ask in the current thread rather than guessing.** Misfiled pages are harder to find later than un-created pages.
 
+### File naming rules
+
+Filenames must be descriptive and human-readable. Dates belong in YAML frontmatter (`date_added`, `as_of_date`, `date`), not in filenames.
+
+- **Raw sources** (`research/_raw/`): Descriptive kebab-case slug derived from `source_name`. No date prefix, no timestamp. Example: `crm-q4-fy2026-earnings.md`, `jbi-holdout-trade.md`.
+- **Briefings** (`research/briefings/`): `briefing-YYYY-MM-DD.md`. The prefix distinguishes them in the graph.
+- **Macro snapshots** (`research/macro/`): `{descriptor}-YYYY-MM-DD.md` where descriptor matches the subfolder purpose. Examples: `rates-2026-04-06.md`, `ig-spreads-2026-04-06.md`, `narrative-2026-04-06.md`, `oil-2026-04-06.md`.
+- **Deep dives** (`research/credit/deep-dives/`): Topic slug only. Example: `crm-financial-policy-shift.md`.
+- **Issuer/sector pages**: Ticker or sector slug. No dates. Example: `CRM.md`, `enterprise-software.md`.
+- **Ledger entries**: Topic slug only. Date is in frontmatter.
+- **Never** use bare date-only filenames like `2026-04-06.md`. Never prefix raw sources with timestamps.
+
 ---
 
 ## Retrieval scoping

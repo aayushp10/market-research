@@ -2,8 +2,8 @@
 date: 2026-04-06
 tags: [credit, spreads, cdx, ig, hy, etf-flows]
 sources:
-  - "[[research/briefings/2026-04-06]]"
-  - citi-credit-snapshot-ig-2026-04-03
+  - "[[research/briefings/briefing-2026-04-06]]"
+  - citi-credit-snapshot-ig
 ---
 
 # Credit Spreads Snapshot — 2026-04-06

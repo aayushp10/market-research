@@ -2,7 +2,7 @@
 date: 2026-04-06
 tags: [narrative, regime, iran, hormuz, deadline, ceasefire, orcl-dislocation]
 sources:
-  - "[[research/briefings/2026-04-06]]"
+  - "[[research/briefings/briefing-2026-04-06]]"
 ---
 
 # Macro Narrative Snapshot — 2026-04-06
