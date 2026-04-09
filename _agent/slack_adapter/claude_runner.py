@@ -45,7 +45,8 @@ def send(prompt: str, session_key: str, timeout: int = _DEFAULT_TIMEOUT) -> str:
     sessions = _load_sessions()
     session_id = sessions.get(session_key)
 
-    cmd = [config.CLAUDE_PATH, "--dangerously-skip-permissions"]
+    cmd = [config.CLAUDE_PATH, "--dangerously-skip-permissions",
+           "--output-format", "json"]
 
     if session_id:
         cmd += ["--resume", session_id]
@@ -76,38 +77,29 @@ def send(prompt: str, session_key: str, timeout: int = _DEFAULT_TIMEOUT) -> str:
 
     output = result.stdout.strip()
 
-    # Extract and persist the session ID from the output if Claude Code emits one.
-    # Claude Code prints the session ID on the first line when starting a new session
-    # in the format: > Session ID: <id>
-    # We scan stdout for it and strip it from the returned text.
-    new_session_id, clean_output = _extract_session_id(output, session_id)
+    # Parse JSON response to extract result text and session ID
+    try:
+        data = json.loads(output)
+        clean_output = data.get("result", "")
+        new_session_id = data.get("session_id")
+        is_error = data.get("is_error", False)
+    except json.JSONDecodeError:
+        logger.warning("claude_runner: failed to parse JSON, using raw output")
+        clean_output = output
+        new_session_id = None
+        is_error = False
+
+    if is_error:
+        raise RuntimeError(
+            f"Claude Code error for session '{session_key}': {clean_output}"
+        )
+
     if new_session_id and new_session_id != session_id:
         sessions[session_key] = new_session_id
         _save_sessions(sessions)
         logger.info("claude_runner: saved session_id=%s for key=%s", new_session_id, session_key)
 
     return clean_output
-
-
-def _extract_session_id(output: str, existing_id: str | None) -> tuple[str | None, str]:
-    """
-    Look for a session ID line in Claude Code output.
-    Returns (session_id_or_None, cleaned_output).
-    Claude Code --print mode emits the session ID as the very last line:
-      Session: <uuid>
-    """
-    lines = output.splitlines()
-    session_id = existing_id
-    kept = []
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("Session:") or stripped.startswith("Session ID:"):
-            parts = stripped.split(":", 1)
-            if len(parts) == 2:
-                session_id = parts[1].strip()
-        else:
-            kept.append(line)
-    return session_id, "\n".join(kept).strip()
 
 
 def clear_session(session_key: str) -> None:
