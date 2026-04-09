@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 _INBOX_PATHS = {
     "research": Path(config.VAULT_PATH) / "research" / "_raw" / "inbox" / "to-tag",
     "training": Path(config.VAULT_PATH) / "training" / "inbox" / "to-tag",
+    "briefing": Path(config.VAULT_PATH) / "research" / "_raw" / "inbox" / "briefing-stage",
 }
 
 _UNSAFE = re.compile(r'[<>:"/\\|?*\x00-\x1f]')

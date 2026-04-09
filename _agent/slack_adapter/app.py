@@ -396,7 +396,7 @@ def _start_deep_dive(client, channel: str, ts: str, target: str) -> None:
 def _trigger_briefing(client, channel: str, ts: str, topic: str | None = None) -> None:
     resp = client.chat_postMessage(
         channel=channel,
-        text=f"Running {'scoped' if topic else 'morning'} briefing... this takes 5–10 minutes.",
+        text="Scanning overnight headlines...",
     )
     thread_ts = resp["ts"]
     thread_state.create(
@@ -406,8 +406,22 @@ def _trigger_briefing(client, channel: str, ts: str, topic: str | None = None) -
         target=topic or "daily",
     )
     try:
-        summary = briefing.run_morning_briefing(topic=topic)
-        client.chat_postMessage(channel=channel, text=summary, thread_ts=thread_ts)
+        # Phase 1: scan headlines
+        scan_result = briefing.scan_headlines(topic=topic)
+        client.chat_postMessage(
+            channel=channel, thread_ts=thread_ts,
+            text=f"Headlines scanned. Writing briefing... (10-15 min)\n\n{scan_result}",
+        )
+        # Phase 2: write briefing
+        result = briefing.write_briefing(topic=topic)
+        client.chat_postMessage(channel=channel, text=result, thread_ts=thread_ts)
+        # Phase 3: propose scope updates
+        scope_proposal = briefing.propose_scope_update()
+        if scope_proposal.strip() and "no scope changes" not in scope_proposal.lower():
+            client.chat_postMessage(
+                channel=channel, thread_ts=thread_ts,
+                text=f"*Proposed scope updates based on today's scan:*\n\n{scope_proposal}",
+            )
         thread_state.update(thread_ts, status="pending_user")
     except Exception as e:
         logger.exception("Briefing failed")
@@ -519,11 +533,25 @@ def handle_file_shared(event, client, logger):
     channel_id = event.get("channel_id")
     ch_type = channel_type(channel_id)
 
-    # Only accept files in #research and #training
+    # Route files by channel
     if ch_type == ChannelType.RESEARCH:
         inbox_type = "research"
     elif ch_type == ChannelType.TRAINING:
         inbox_type = "training"
+    elif ch_type == ChannelType.BRIEFINGS:
+        # Briefing files go straight to staging — no inference-review
+        try:
+            info = client.files_info(file=file_id)
+            file_info = info["file"]
+            msg, saved_path = inbox_handler.handle_file_upload(file_info, "briefing")
+            client.chat_postMessage(
+                channel=channel_id,
+                text=f"Staged for next briefing: `{saved_path.name}`",
+            )
+        except Exception as e:
+            logger.exception("Briefing file staging failed")
+            _post_error(client, channel_id, None, e)
+        return
     elif ch_type == ChannelType.JOURNAL:
         client.chat_postMessage(
             channel=channel_id,
@@ -533,7 +561,7 @@ def handle_file_shared(event, client, logger):
     else:
         client.chat_postMessage(
             channel=channel_id,
-            text="File uploads go in #research (for raw sources) or #training (for training material).",
+            text="File uploads go in #research, #training, or #briefings.",
         )
         return
 
@@ -700,7 +728,12 @@ def _handle_thread_reply(client, channel: str, ch_type: ChannelType, thread_ts: 
                 f"Review feedback from Aayush on today's briefing:\n\n{text}\n\n"
                 f"Apply all corrections to the daily file. "
                 f"If he approves or rejects any ledger promotion candidates, note that. "
-                f"Mark status: final, reviewed: true, add reviewed_at timestamp. "
+                f"If he approves scope changes (proposed earlier in this thread), "
+                f"apply them to research/briefing-scope.md — update last_updated to today "
+                f"and increment the version number. If he rejects scope changes, "
+                f"do nothing to the scope file. If he selectively approves "
+                f"(e.g. 'approve X, reject Y'), apply only the approved changes. "
+                f"Mark briefing status: final, reviewed: true, add reviewed_at timestamp. "
                 f"Update relevant research/macro/* subfolders if material. "
                 f"Append to research/briefings/_log.md and log.md. "
                 f"Commit with format: 'v2-briefings: YYYY-MM-DD reviewed — {{one-line summary}}'. "
